@@ -12,28 +12,31 @@ class Blackjack():
     DOUBLE_DOWN = 3
 
     def __init__(self, bet, deck_count):
-        self.playing = False
-        self.logs = False
-        self.bet = bet
+        # Master deck copied to make a game deck
         self.master_deck = self.__build_deck(deck_count)
-        self.deck = []
-        self.player_hand = []
-        self.dealer_hand = []
-        self.split_hand = []
-        self.player_hand_sum = 0
-        self.split_hand_sum = 0
-        self.round = 0
-        self.split = False
-        self.split_active = False
-        self.final_reward = 0
+        self.playing = False                    # game in progress?
+        self.logs = False                       # display logs?
+        self.bet = bet                          # possible reward for winning/losing                          
+        self.deck = []                          # current game deck
+        self.player_hand = []                   # cards in the players hand
+        self.dealer_hand = []                   # cards in the dealers hand ([0] = SHOWING)
+        self.split_hand = []                    # cards in the split hand (if applicable)
+        self.player_hand_sum = 0                # total value of player hand
+        self.dealer_hand_sum = 0                # total value of dealer hand 
+        self.split_hand_sum = 0                 # total value of split hand (if applicable)
+        self.round = 0                          # game round    
+        self.final_reward = 0                   # unused atm
+        self.split = False                      # is there a split hand?
+        self.split_active = False               # is current hand being played a split hand?
 
     def __build_deck(s, deck_count):
         deck = []
+        # Add 4 cards for each numbered value A - 9 to the deck
         for card in range(1,10):
             deck.append(4*deck_count)
+        # Add 4 cards of value 10 for 10, J, Q, K
         for tens in range(4):
             deck.append(4*deck_count)
-#        print(deck)
         return(deck)
 
     def build_state(s, hand):
@@ -57,9 +60,11 @@ class Blackjack():
         s.player_hand = [0,0]
         s.dealer_hand = [0,0]
         s.split_hand = [0,0]
-        s.player_hand_sum = 0
-        s.dealer_hand_sum = 0
-        s.split_hand_sum = 0
+        s.player_hand_sum = 0               # total value of player hand
+        s.dealer_hand_sum = 0               # total value of dealer hand 
+        s.split_hand_sum = 0                # total value of split hand (if applicable)
+        s.round = 0                         # game round    
+        s.final_reward = 0                  # unused atm
 
         s.player_hand[0] = s.__draw_card() 
         s.player_hand[1] = s.__draw_card() 
