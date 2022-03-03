@@ -37,15 +37,16 @@ class Blackjack():
         return(deck)
 
     def build_state(s, hand):
-        hand_sum = 0
-        if (hand[0] == 1):
-            hand_sum = 21
-        elif (hand[0] == 11):
-            hand_sum = 20 + hand[1]
-        elif (hand[1] == 11):
-            hand_sum = 20 + hand[0]
-        else:
-            hand_sum = sum(hand)
+        # Initially set state to sum of the card values
+        hand_sum = sum(hand)
+        # If hand != [A, 10] check for an ace ([A,A] = [1,11])
+        if (hand_sum != 21):
+            if (hand[0] == 11):
+                hand_sum += 10
+            elif (hand[1] == 11):
+                hand_sum += 10
+            else:
+                hand_sum = sum(hand)
         return tuple([hand_sum, s.dealer_hand[s.SHOWING]])
 
     def start_hand(s):
@@ -62,6 +63,7 @@ class Blackjack():
 
         s.player_hand[0] = s.__draw_card() 
         s.player_hand[1] = s.__draw_card() 
+        # If there are 2 ACES, make one ACE = 1
         if (sum(s.player_hand) == 22):
             s.player_hand[0] = 1
         s.player_hand_sum = sum(s.player_hand)
@@ -69,8 +71,12 @@ class Blackjack():
         while (s.dealer_hand == [0,0]):
             s.dealer_hand[s.SHOWING] = s.__draw_card()
             s.dealer_hand[s.HIDDEN] = s.__draw_card()
+            # If the dealer has 'blackjack', return card to deck and redraw 
             if (sum(s.dealer_hand) == 21):
+                s.__return_card(s.dealer_hand[s.SHOWING])
+                s.__return_card(s.dealer_hand[s.HIDDEN])
                 s.dealer_hand = [0,0]                    
+        # If there are 2 ACES, make hidden ACE = 1
         if (sum(s.dealer_hand) == 22):
             s.dealer_hand[s.HIDDEN] = 1
         s.dealer_hand_sum = sum(s.dealer_hand)
@@ -97,7 +103,7 @@ class Blackjack():
             state, reward = s.action[move](s)
             if (s.logs == True):
 #                print(f'State: {state}  Reward: {reward}  Player: {s.player_hand_sum}  Player Hand: {s.player_hand}  Dealer: {s.dealer_hand_sum}  split: {s.split_hand_sum}  Split Hand: {s.split_hand}  Split Active= {s.split_active}  Split= {s.split}')
-                print(f'State: {state}  Reward: {reward}  Player Hand: {s.player_hand}  Player: {s.player_hand_sum}  Dealer Showing: {s.dealer_hand[s.SHOWING]}  Player Hand: {s.player_hand}  split: {s.split_hand_sum}  Split Hand: {s.split_hand}  Split Active= {s.split_active}  Split= {s.split}')
+                print(f'State: {state}  Reward: {reward}  Player Hand: {s.player_hand}  Player: {s.player_hand_sum}  Dealer Showing: {s.dealer_hand[s.SHOWING]}  Player Hand: {s.player_hand}  Split: {s.split_hand_sum}  Split Hand: {s.split_hand}  Split Active= {s.split_active}  Split= {s.split}')
         elif (s.logs == True):
             print("No game in progress")
         return state, reward
@@ -107,6 +113,7 @@ class Blackjack():
         state = None
         card = s.__draw_card()
         if (s.split_active == True):
+            s.split_hand.append(card)
             s.split_hand_sum += card
             reward = s.is_busted(s.split_hand_sum)
             if (reward < 0):
@@ -134,6 +141,7 @@ class Blackjack():
             else:
                 state = s.build_state(s.split_hand)
         else:
+            s.player_hand.append(card)
             s.player_hand_sum += card
             reward = s.is_busted(s.player_hand_sum)
             if (reward < 0):
@@ -162,6 +170,23 @@ class Blackjack():
                 state = s.build_state(s.player_hand)
         return state, reward
 
+    def __check_winner(s, hand_sum, hand_id):
+        if (s.dealer_hand_sum > 21):
+            if (s.logs == True):
+                print(f"Dealer busted. {hand_id} won")
+            reward = s.bet
+        elif (s.dealer_hand_sum < s.player_hand_sum):
+            if (s.logs == True):
+                print(f"{hand_id}({hand_sum}) beat Dealer({s.dealer_hand_sum})")
+            reward = s.bet
+        elif (s.dealer_hand_sum > hand_sum):
+            if (s.logs == True):
+                print(f"Dealer({s.dealer_hand_sum}) beat {hand_id}({s.player_hand_sum})")
+            reward = -s.bet
+        elif (s.logs == True):
+            print(f"{hand_id} Push ({hand_sum})")       
+        return reward
+
     def __stand(s):
         state = None
         reward = 0
@@ -180,31 +205,9 @@ class Blackjack():
                 while (s.dealer_hand_sum < 17):
                     card = s.__draw_card()
                     s.dealer_hand_sum += card        
-                if (s.dealer_hand_sum > 21):
-                    if (s.logs == True):
-                        print("Dealer busted. Player won")
-                    reward = s.bet
-                elif (s.dealer_hand_sum < s.player_hand_sum):
-                    if (s.logs == True):
-                        print(f"Player({s.player_hand_sum}) beat Dealer({s.dealer_hand_sum})")
-                    reward = s.bet
-                elif (s.dealer_hand_sum > s.player_hand_sum):
-                    if (s.logs == True):
-                        print(f"Dealer({s.dealer_hand_sum}) beat Player({s.player_hand_sum})")
-                    reward = -s.bet
+                reward += s.__check_winner(s.player_hand_sum, 'Player')
             if (s.split == True):
-                if (s.dealer_hand_sum > 21):
-                    if (s.logs == True):
-                        print("Dealer busted. Split won")
-                    reward += s.bet
-                elif (s.dealer_hand_sum < s.split_hand_sum):
-                    if (s.logs == True):
-                        print(f"Split({s.split_hand_sum}) beat Dealer({s.dealer_hand_sum})")
-                    reward += s.bet
-                elif (s.dealer_hand_sum > s.split_hand_sum):
-                    if (s.logs == True):
-                        print(f"Dealer({s.dealer_hand_sum}) beat Split({s.split_hand_sum})")
-                    reward += -s.bet           
+                reward += s.__check_winner(s.split_hand_sum, 'Split')
             s.playing = False                         
         return state, reward
 
@@ -259,6 +262,9 @@ class Blackjack():
         if (s.logs == True):
             print(f'Drew: {card}')
         return card
+
+    def __return_card(s, card):
+        s.deck[card] += 1
 
     action = {
         0 : __hit,
