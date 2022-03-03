@@ -1,6 +1,7 @@
 from copy import deepcopy
 from random import betavariate, randrange
 import os
+
 class Blackjack():
     SHOWING = 0
     HIDDEN = 1
@@ -35,6 +36,18 @@ class Blackjack():
 #        print(deck)
         return(deck)
 
+    def build_state(s, hand):
+        hand_sum = 0
+        if (hand[0] == 1):
+            hand_sum = 21
+        elif (hand[0] == 11):
+            hand_sum = 20 + hand[1]
+        elif (hand[1] == 11):
+            hand_sum = 20 + hand[0]
+        else:
+            hand_sum = sum(hand)
+        return tuple([hand_sum, s.dealer_hand[s.SHOWING]])
+
     def start_hand(s):
         s.playing = True
         s.split_active = False 
@@ -62,9 +75,9 @@ class Blackjack():
             s.dealer_hand[s.HIDDEN] = 1
         s.dealer_hand_sum = sum(s.dealer_hand)
 
-        state = tuple([tuple(s.player_hand), s.player_hand_sum, s.dealer_hand[s.SHOWING]])
+        state = s.build_state(s.player_hand)
         if (s.logs == True):
-            print(f'State: {state}  Player: {s.player_hand_sum}  Dealer: {s.dealer_hand[s.SHOWING]}  Reamining Deck: {s.deck}')
+            print(f'State: {state}  Player Hand: {s.player_hand}  Player: {s.player_hand_sum}  Dealer showing: {s.dealer_hand[s.SHOWING]}  Reamining Deck: {s.deck}')
         return state
 
     def logs_on(s, logs):
@@ -84,7 +97,7 @@ class Blackjack():
             state, reward = s.action[move](s)
             if (s.logs == True):
 #                print(f'State: {state}  Reward: {reward}  Player: {s.player_hand_sum}  Player Hand: {s.player_hand}  Dealer: {s.dealer_hand_sum}  split: {s.split_hand_sum}  Split Hand: {s.split_hand}  Split Active= {s.split_active}  Split= {s.split}')
-                print(f'State: {state}  Reward: {reward}  Player: {s.player_hand_sum}  Dealer Showing: {s.dealer_hand[s.SHOWING]}  Player Hand: {s.player_hand}  split: {s.split_hand_sum}  Split Hand: {s.split_hand}  Split Active= {s.split_active}  Split= {s.split}')
+                print(f'State: {state}  Reward: {reward}  Player Hand: {s.player_hand}  Player: {s.player_hand_sum}  Dealer Showing: {s.dealer_hand[s.SHOWING]}  Player Hand: {s.player_hand}  split: {s.split_hand_sum}  Split Hand: {s.split_hand}  Split Active= {s.split_active}  Split= {s.split}')
         elif (s.logs == True):
             print("No game in progress")
         return state, reward
@@ -100,26 +113,26 @@ class Blackjack():
                 if (card == 11):
                     reward = 0
                     s.split_hand_sum -= 10
-                    state = tuple([tuple(s.split_hand), s.split_hand_sum, s.dealer_hand[s.SHOWING]]) 
+                    state = s.build_state(s.split_hand)
                 elif (s.split_hand[0] == 11):
                     reward = 0
                     s.split_hand[0] = 1
                     s.split_hand_sum -= 10
-                    state = tuple([tuple(s.split_hand), s.split_hand_sum, s.dealer_hand[s.SHOWING]])                    
+                    state = s.build_state(s.split_hand)
                 elif (s.split_hand[1] == 11):
                     reward = 0
                     s.split_hand[1] = 1
                     s.split_hand_sum -= 10
-                    state = tuple([tuple(s.split_hand), s.split_hand_sum, s.dealer_hand[s.SHOWING]])                    
+                    state = s.build_state(s.split_hand)
                 else:
-                    state = tuple([tuple(s.player_hand), s.player_hand_sum, s.dealer_hand[s.SHOWING]])
+                    state = s.build_state(s.player_hand)
                     s.split_active = False
                     reward = -s.bet
                     if (s.logs == True):
                         print(f"Split busted: {s.split_hand_sum}")
 
             else:
-                state = tuple([tuple(s.split_hand), s.split_hand_sum, s.dealer_hand[s.SHOWING]])                    
+                state = s.build_state(s.split_hand)
         else:
             s.player_hand_sum += card
             reward = s.is_busted(s.player_hand_sum)
@@ -127,17 +140,17 @@ class Blackjack():
                 if (card == 11):
                     reward = 0
                     s.player_hand_sum -= 10
-                    state = tuple([tuple(s.player_hand), s.player_hand_sum, s.dealer_hand[s.SHOWING]])
+                    state = s.build_state(s.player_hand)
                 elif (s.player_hand[0] == 11):
                     reward = 0
                     s.player_hand[0] = 1
                     s.player_hand_sum -= 10
-                    state = tuple([tuple(s.player_hand), s.player_hand_sum, s.dealer_hand[s.SHOWING]])
+                    state = s.build_state(s.player_hand)
                 elif (s.player_hand[1] == 11):
                     reward = 0
                     s.player_hand[1] = 1
                     s.player_hand_sum -= 10
-                    state = tuple([tuple(s.player_hand), s.player_hand_sum, s.dealer_hand[s.SHOWING]])
+                    state = s.build_state(s.player_hand)
                 else:
                     s.playing = False
                     if (s.logs == True):
@@ -146,14 +159,14 @@ class Blackjack():
                         reward = -s.bet
                         reward = s.__stand()
             else:
-                state = tuple([tuple(s.player_hand), s.player_hand_sum, s.dealer_hand[s.SHOWING]])
+                state = s.build_state(s.player_hand)
         return state, reward
 
     def __stand(s):
         state = None
         reward = 0
         if (s.split_active == True):
-            state = tuple([tuple(s.player_hand), s.player_hand_sum, s.dealer_hand[s.SHOWING]])
+            state = s.build_state(s.player_hand)
             s.split_active = False
             s.split = True
             s.round = 1
@@ -216,7 +229,7 @@ class Blackjack():
             s.player_hand_sum = sum(s.player_hand)
             s.split_hand_sum = sum(s.split_hand)
             s.split_active = True
-            state = tuple([tuple(s.split_hand), s.split_hand_sum, s.dealer_hand[s.SHOWING]])
+            state = s.build_state(s.split_hand)
         return state, reward
 
     def __double_down(s):
