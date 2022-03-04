@@ -30,9 +30,11 @@ class Blackjack():
         self.deck = []                          # current game deck
         self.hands = [[0,0],[0,0],[0,0]]
         self.hand_sums = [0,0,0]                   # Stores the sums of player, split, and dealer hands
-        self.player_busted = False
-        self.split_busted = False
-        self.dealer_busted = False
+        self.player_lost = False
+        self.split_lost = False
+        self.player_won = False
+        self.split_won = False
+        self.dealer_lost = False
         self.round = 0                          # game round    
         self.final_reward = 0                   # unused atm
         self.split = False                      # is there a split hand?
@@ -69,10 +71,12 @@ class Blackjack():
         s.split = False
         s.deck = deepcopy(s.master_deck)
         s.hands = [[0,0],[0,0],[0,0]]
-        s.hand_sums = [0,0,0]                   # Stores the sums of player, split, and dealer hands
-        s.player_busted = False
-        s.split_busted = False
-        s.dealer_busted = False
+        s.hand_sums = [0,0,0]               # Stores the sums of player, split, and dealer hands
+        s.player_lost = False
+        s.split_lost = False
+        s.player_won = False
+        s.split_won = False
+        s.dealer_lost = False
         s.round = 0                         # game round    
         s.final_reward = 0                  # unused atm
 
@@ -81,7 +85,6 @@ class Blackjack():
         # If there are 2 ACES, make one ACE = 1
         if (sum(s.hands[s.PLAYER_HAND]) == 22):
             s.hands[s.PLAYER_HAND][0] = 1
-#        s.player_hand_sum = sum(s.player_hand)
         s.hand_sums[s.PLAYER_HAND] = sum(s.hands[s.PLAYER_HAND])
         while (s.hands[s.DEALER_HAND] == [0,0]):
             s.hands[s.DEALER_HAND][s.SHOWING] = s.__draw_card()
@@ -94,7 +97,6 @@ class Blackjack():
         # If there are 2 ACES, make hidden ACE = 1
         if (sum(s.hands[s.DEALER_HAND]) == 22):
             s.hands[s.DEALER_HAND][s.HIDDEN] = 1
-#        s.dealer_hand_sum = sum(s.dealer_hand)
         s.hand_sums[s.DEALER_HAND] = sum(s.hands[s.DEALER_HAND])
 
         state = s.build_state(s.hands[s.PLAYER_HAND])
@@ -113,117 +115,117 @@ class Blackjack():
 
     def do_action(s, move):
         state = None
-        reward = 0        
         if (s.playing == True):
             s.round += 1
-            state, reward = s.action[move](s)
+            s.action[move](s)
+            if (s.split_active == True):
+                state = s.build_state(s.hands[s.SPLIT_HAND])
+            elif (s.playing == True):
+                state = s.build_state(s.hands[s.PLAYER_HAND])
+            if (s.playing == False):
+                if (s.split_lost == True):
+                    s.final_reward += -s.bet
+                elif (s.split_won):
+                    s.final_reward += s.bet
+                if (s.player_lost == True):
+                    s.final_reward += -s.bet
+                elif (s.player_won):
+                    s.final_reward += s.bet
             if (s.logs == True):
-#                print(f'State: {state}  Reward: {reward}  Player: {s.player_hand_sum}  Player Hand: {s.player_hand}  Dealer: {s.dealer_hand_sum}  split: {s.split_hand_sum}  Split Hand: {s.split_hand}  Split Active= {s.split_active}  Split= {s.split}')
-                print(f'State: {state}  Reward: {reward}  Player Hand: {s.hands[s.PLAYER_HAND]}  Player: {s.hand_sums[s.PLAYER_HAND]}  Dealer Showing: {s.hands[s.DEALER_HAND][s.SHOWING]}  Split: {s.hand_sums[s.SPLIT_HAND]}  Split Hand: {s.hands[s.SPLIT_HAND]}  Split Active= {s.split_active}  Split= {s.split}')
+                print(f'State: {state}  Reward: {s.final_reward}  Player Hand: {s.hands[s.PLAYER_HAND]}  Player: {s.hand_sums[s.PLAYER_HAND]}  Dealer Showing: {s.hands[s.DEALER_HAND][s.SHOWING]}  Split: {s.hand_sums[s.SPLIT_HAND]}  Split Hand: {s.hands[s.SPLIT_HAND]}  Split Active={s.split_active}  Split={s.split}  Playing={s.playing}  Player Lost={s.player_lost}  Split Lost={s.split_lost}')
         elif (s.logs == True):
             print("No game in progress")
-        return state, reward
+        return state, s.final_reward
 
-    def __check_aces(s, reward, hand_id, id):
-        state = None
+    def __check_aces(s, hand_id, id):
+        busted = True
         for card in range(len(s.hands[hand_id])):
             if (s.hands[hand_id][card] == 11):
                 s.hands[hand_id][card] = 1
                 s.hand_sums[hand_id] -= 10
-                reward = s.is_busted(s.hand_sums[hand_id])
-                if (reward == 0):
-                    state = s.build_state(s.hands[hand_id])
+                busted = s.is_busted(s.hand_sums[hand_id])
                 break
-        if (reward < 0):
-            if (hand_id == s.SPLIT_HAND):
-                s.split_busted = True
-            elif (hand_id == s.PLAYER_HAND):
-                s.playing = False
-                s.player_busted = True
-                if(s.split == True):
-                    state, reward = s.__stand()
-            if (s.logs == True):
-                print(f"{id} busted: {s.hand_sums[hand_id]}")
-        return state, reward
+        return busted
 
     def __hit(s):
-        reward = 0
-        state = None
         card = s.__draw_card()
         if (s.split_active == True):
             s.hands[s.SPLIT_HAND].append(card)
             s.hand_sums[s.SPLIT_HAND] += card
-            s.split_busted = s.is_busted(s.hand_sums[s.SPLIT_HAND])
-            if (s.split_busted):
-                s.split_busted = s.__check_aces(reward, s.SPLIT_HAND, 'Split')
-                if (s.split_busted == True):
-                    state = s.build_state(s.hands[s.PLAYER_HAND])
+            s.split_lost = s.is_busted(s.hand_sums[s.SPLIT_HAND])
+            if (s.split_lost):
+                s.split_lost = s.__check_aces(s.SPLIT_HAND, 'Split')
+                if (s.split_lost == True):
                     s.split_active = False
-            else:
-                state = s.build_state(s.hands[s.SPLIT_HAND])
+                if (s.logs == True):
+                    print(f"Split busted: {s.hand_sums[s.SPLIT_HAND]}")
         else:
             s.hands[s.PLAYER_HAND].append(card)
             s.hand_sums[s.PLAYER_HAND] += card
-            s.player_busted = s.is_busted(s.hand_sums[s.PLAYER_HAND])
-            if (s.player_busted):
-                s.player_busted = s.__check_aces(reward, s.PLAYER_HAND, 'Player')
-            else:
-                state = s.build_state(s.hands[s.PLAYER_HAND])
-        return state, reward
+            s.player_lost = s.is_busted(s.hand_sums[s.PLAYER_HAND])
+            if (s.player_lost == True):
+                s.player_lost = s.__check_aces(s.PLAYER_HAND, 'Player')
+                if (s.player_lost == True):
+                    s.playing = False
+                    if (s.logs == True):
+                        print(f"Player busted: {s.hand_sums[s.PLAYER_HAND]}")    
+                    if(s.split == True):
+                        s.__dealer_play()
 
     def __check_winner(s, hand_sum, hand_id):
-        if (s.hand_sums[s.DEALER_HAND] > 21):
+        player_won = False    
+        if (s.dealer_lost == True):
             if (s.logs == True):
                 print(f"Dealer busted. {hand_id} won")
-            reward = s.bet
+            player_won = True
         elif (s.hand_sums[s.DEALER_HAND] < s.hand_sums[s.PLAYER_HAND]):
             if (s.logs == True):
                 print(f"{hand_id}({hand_sum}) beat Dealer({s.hand_sums[s.DEALER_HAND]})")
-            reward = s.bet
+            player_won = True
         elif (s.hand_sums[s.DEALER_HAND] > hand_sum):
             if (s.logs == True):
                 print(f"Dealer({s.hand_sums[s.DEALER_HAND]}) beat {hand_id}({s.hand_sums[s.PLAYER_HAND]})")
-            reward = -s.bet
+            s.player_lost = True
         elif (s.logs == True):
             print(f"{hand_id} Push ({hand_sum})")       
-        return reward
+        return player_won
+
+    def __dealer_play(s):
+        s.hand_sums[s.DEALER_HAND] = sum(s.hands[s.DEALER_HAND])
+        while (s.hand_sums[s.DEALER_HAND] < 17):
+            card = s.__draw_card()
+            s.hands[s.DEALER_HAND].append(card)
+            s.hand_sums[s.DEALER_HAND] += card
+            s.dealer_lost = s.is_busted(s.hand_sums[s.DEALER_HAND])
+            if (s.dealer_lost == True):
+                s.dealer_lost = s.__check_aces(s.DEALER_HAND, 'Dealer')
+        if (s.player_lost != True):
+            s.player_won += s.__check_winner(s.hand_sums[s.PLAYER_HAND], 'Player')
+        if (s.split == True):
+            s.split_won += s.__check_winner(s.hand_sums[s.SPLIT_HAND], 'Split')                         
 
 # Need to check dealer aces
     def __stand(s):
-        state = None
-        reward = 0
         if (s.split_active == True):
-            state = s.build_state(s.hands[s.PLAYER_HAND])
             s.split_active = False
             s.split = True
-            s.round = 1
             if (s.logs == True):
-                print(f"Standing on Split hand({s.hand_sums[s.PLAYER_HAND]}). Start Player hand")
-        else:
-            if (s.playing == True):
-                if (s.logs == True):
-                    print(f"Standing on Player hand")                    
-                s.hand_sums[s.DEALER_HAND] = sum(s.hands[s.DEALER_HAND])
-                while (s.hand_sums[s.DEALER_HAND] < 17):
-                    card = s.__draw_card()
-                    s.hand_sums[s.DEALER_HAND] += card        
-                reward += s.__check_winner(s.hand_sums[s.PLAYER_HAND], 'Player')
-        if (s.split == True):
-            reward += s.__check_winner(s.hand_sums[s.SPLIT_HAND], 'Split')
-        s.playing = False                         
-        return state, reward
+                print(f"Standing on Split hand({s.hand_sums[s.SPLIT_HAND]}). Start Player hand")
+        elif (s.player_lost != True):
+            if (s.logs == True):
+                print(f"Standing on Player hand")                    
+            s.playing = False                         
+        if (s.playing == False):
+            s.__dealer_play()
 
     def __split(s):
-        reward = 0
         if (s.round > 1):
-            reward = -s.bet
-            state = None
+            s.player_lost = True    
             s.playing = False
             if (s.logs == True):
                 print("Can't split after round 1")
         elif (s.hands[s.PLAYER_HAND][0] != s.hands[s.PLAYER_HAND][1]):
-            reward = -s.bet
-            state = None
+            s.player_lost = True    
             s.playing = False
             if (s.logs == True):
                 print("Cards must match to split")
@@ -234,8 +236,6 @@ class Blackjack():
             s.hand_sums[s.PLAYER_HAND] = sum(s.hands[s.PLAYER_HAND])
             s.hand_sums[s.SPLIT_HAND] = sum(s.hands[s.SPLIT_HAND])
             s.split_active = True
-            state = s.build_state(s.hands[s.SPLIT_HAND])
-        return state, reward
 
     def __double_down(s):
         reward = 0
