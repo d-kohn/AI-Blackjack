@@ -104,7 +104,7 @@ class Blackjack():
 
         if (s.round == 1):
             if (s.hands[s.PLAYER_HAND][s.CARD_1] == s.hands[s.PLAYER_HAND][s.CARD_2]):
-                print(s.hands[s.PLAYER_HAND])
+#                print(s.hands[s.PLAYER_HAND])
                 hand_state = 29 + s.hands[s.PLAYER_HAND][s.CARD_1]
         return tuple([hand_state, s.hands[s.DEALER_HAND][s.SHOWING],state_round])
 
