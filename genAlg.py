@@ -16,7 +16,7 @@ chromosomes for use in the genetic algorithm solver
 """
 class population(object):
 
-    def __init__(self, pop_num, fit_hands_to_play=1):
+    def __init__(self, pop_num, fit_hands_to_play=10):
         self.num = pop_num
         self.size = 0
         self.list = []
@@ -105,7 +105,7 @@ class geneticAlg(object):
     """
     def getNextPop(self, pop):
         #set up next pop
-        nextPop = population(pop.num+1)
+        nextPop = population(pop.num+1) #Q - why increasing population?
         for _ in range(self.popSize//2):
             p1 = pop.getRandWeighted()
             p2 = pop.getRandWeighted()

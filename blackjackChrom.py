@@ -192,7 +192,7 @@ class chromosome(object):
 
     def getFitness(self, hands_to_play):
         game = Blackjack(10,1)
-        fitness = 0
+        fitness = 1000 #BUG fix - this allows the weights to never be negative in genAlg getRandomWeighted
         edStr = list(self.string)
         for _ in range(hands_to_play):
             state = game.start_hand()
@@ -201,7 +201,7 @@ class chromosome(object):
                 # Using the current game state, get the gene # from the action map                  
                 gene = self.action_map[state]
                 # Get the next action to play from the chromosome string using the gene index
-                action = int(edStr[gene]) #BUG: nothing to cast if the item at index is ' '
+                action = int(edStr[gene]) 
                 if (self.logs == True):
                     print(f'Gene: {gene}  Action: {action}')
                     print(f'State: {state}  Next action {self.action_string[action]}')
@@ -247,13 +247,13 @@ class chromosome(object):
         crossInd = randint(0, self.size-1)
         str1 = self.string[:crossInd]+other.string[crossInd:]
         str2 = other.string[:crossInd]+self.string[crossInd:]
-        return (self.mutate(chromosome(str1)), self.mutate(chromosome(str2)))
+        return (chromosome(str1), chromosome(str2))
 
     def mutate(s):
         actions = [s.HIT, s.STAND, s.DOUBLE_DOWN, s.SPLIT]
         edStr = list(s.string)
         edStr[randint(0,s.size-1)] = choice(actions)
-        s.string = "".join(edStr)
+        s.string = "".join(str(x) for x in edStr) 
         
     def output_action_table(s, file):
         with open(file, "w") as f:
