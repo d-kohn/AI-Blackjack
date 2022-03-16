@@ -4,10 +4,43 @@ A collection of classes to represent the operation of a genetic algorithm
 on the n-Queens problem.
 """
 
+#from sympy import O
 from blackjackChrom import chromosome
 from random import choices, random
+from matplotlib import pyplot as plt
 from math import comb
 from time import time
+
+
+"""
+Class to hold and display fitness score information for the geneticAlg class
+"""
+class Graph:
+    def __init__(self, time_limit):
+        self.x_limit = time_limit/10 #will plot every ten time units
+        self.y_limit = 1500 #change
+        self.z_limit = 1500 #change
+        self.xs = []
+        self.ys = [] #average fitness of population
+        self.zs = [] #best fitness in population
+        #TODO store best chromosome somewhere?
+
+    def add_to_plot(self, fitness_scores):
+        if (len(self.xs) != 0):
+            self.xs.append(self.xs[-1]+10) #add an x value for this time step (called every ten)
+        else:
+            self.xs.append(0) #add an x value for this time step (called every ten)
+
+        self.ys.append(sum(fitness_scores)/len(fitness_scores)) #add average fitness to ys
+        self.zs.append(max(fitness_scores)) #add best fitness to xs
+            
+    def show_plot(self):
+        plt.plot(self.xs, self.ys, 'c')
+        plt.plot(self.xs, self.zs, color='#B026FF')
+        plt.xlim([0, self.x_limit])
+        plt.ylim([0, self.y_limit])
+        plt.show()
+
 
 
 """
@@ -105,7 +138,7 @@ class geneticAlg(object):
     """
     def getNextPop(self, pop):
         #set up next pop
-        nextPop = population(pop.num+1) #Q - why increasing population?
+        nextPop = population(pop.num+1) 
         for _ in range(self.popSize//2):
             p1 = pop.getRandWeighted()
             p2 = pop.getRandWeighted()
@@ -161,18 +194,22 @@ class geneticAlg(object):
         return popNodesList
 
     def runAlgTime(self, timeLimit):
+        self.graph = Graph(timeLimit)
         start = time()
         popNodesList = []
         curPop = self.makeInitialPopulation()
         while(True):
+            time_passed = time()-start
+            if(time_passed%10 < 1):
+                self.graph.add_to_plot(curPop.fits)
             nextGen = self.getNextPop(curPop)
             popNodesList.append(popNode(curPop))
             curPop = nextGen
-            if time()-start >= timeLimit:
+            if time_passed >= timeLimit:
                 break
         popNodesList.append(popNode(curPop))
         return popNodesList
-            
+
 
             
 
