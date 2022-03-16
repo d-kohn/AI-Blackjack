@@ -6,7 +6,7 @@ on the n-Queens problem.
 
 #from sympy import O
 from blackjackChrom import chromosome
-from random import choices, random
+from random import choices, random, randrange
 from matplotlib import pyplot as plt
 from math import comb
 from time import time
@@ -147,9 +147,12 @@ class geneticAlg(object):
             coPair = p1.crossover(p2)
             child1 = coPair[0]
             child2 = coPair[1]
-            if random() < self.mutChance:
+            #TODO remove
+            print(random)
+            print(type(random))
+            if randrange(0,1) < self.mutChance:
                 child1.mutate()
-            if random() < self.mutChance:
+            if randrange(0,1) < self.mutChance:
                 child2.mutate()
             nextPop.add(child1)
             nextPop.add(child2)
