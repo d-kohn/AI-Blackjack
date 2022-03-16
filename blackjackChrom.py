@@ -175,7 +175,7 @@ class chromosome(object):
         actions = [s.HIT, s.STAND, s.DOUBLE_DOWN, s.SPLIT]
         randStr = ""
         for _ in range(s.size):
-            randStr += choice(actions)
+            randStr += str(choice(actions)) #BUG fix: prior version created empty elements that did not cast to int in getFitness
         return randStr
 
     # Map game states to a chromosome string index
@@ -201,7 +201,7 @@ class chromosome(object):
                 # Using the current game state, get the gene # from the action map                  
                 gene = self.action_map[state]
                 # Get the next action to play from the chromosome string using the gene index
-                action = int(edStr[gene])
+                action = int(edStr[gene]) #BUG: nothing to cast if the item at index is ' '
                 if (self.logs == True):
                     print(f'Gene: {gene}  Action: {action}')
                     print(f'State: {state}  Next action {self.action_string[action]}')

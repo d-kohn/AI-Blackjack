@@ -16,17 +16,19 @@ chromosomes for use in the genetic algorithm solver
 """
 class population(object):
 
-    def __init__(self, pop_num):
+    def __init__(self, pop_num, fit_hands_to_play=1):
         self.num = pop_num
         self.size = 0
         self.list = []
         self.fits = []
+        if(fit_hands_to_play):
+            self.fit_hands_to_play = fit_hands_to_play
         self.fittest = None
         self.maxFit = 0
 
     def add(self, new):
         self.list.append(new)
-        fitness = new.getFitness()
+        fitness = new.getFitness(self.fit_hands_to_play)
         self.fits.append(fitness)
         if fitness > self.maxFit:
             self.maxFit = fitness
@@ -40,7 +42,7 @@ class population(object):
         return tot/self.size
 
     def getRandWeighted(self):
-        return choices(self.list, self.fits, k=1)[0]
+        return choices(self.list, self.fits, k=1)[0] #BUG ? - fitnesses are often negative, this raises ValueError
 
 
 class popNode(object):
