@@ -4,7 +4,7 @@ from q_table import Q_Table
 
 GA_FILE = 'best-chromosome.txt'
 Q_FILE = 'q-table.txt'
-NUM_HANDS = 100
+NUM_HANDS = 200
 
 class GA_player:
     def __init__(self):
@@ -27,7 +27,7 @@ class GA_player:
                 state, reward = game.do_action(action)
 
             #decrease by amount lost only
-            if(reward[0] > 0):
+            if(reward[0] < 0):
                 final_reward += reward[0] 
         return final_reward
 
@@ -49,7 +49,7 @@ class Q_player:
                 state, reward = game.do_action(action)
 
             #decrease by amount lost only
-            if(reward[0] > 0):
+            if(reward[0] < 0):
                 final_reward += reward[0] 
         return final_reward
 
