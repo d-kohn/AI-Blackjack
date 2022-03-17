@@ -2,10 +2,9 @@ from genAlg import geneticAlg
 
 
 def ga_main():
-    ga_player = geneticAlg(100, .2)
+    ga_player = geneticAlg(100, .3)
 
-    # timelimit in ??
-    ga_player.runAlgTime(100)
+    ga_player.runAlgTime(1200)
     ga_player.graph.show_plot()
     
 

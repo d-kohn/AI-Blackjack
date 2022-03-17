@@ -192,7 +192,7 @@ class chromosome(object):
 
     def getFitness(self, hands_to_play):
         game = Blackjack(10,1)
-        fitness = 1000 #BUG fix - this allows the weights to never be negative in genAlg getRandomWeighted
+        fitness = 2000 #start at 100% and subtract losses
         edStr = list(self.string)
         for _ in range(hands_to_play):
             state = game.start_hand()
@@ -207,7 +207,11 @@ class chromosome(object):
                     print(f'State: {state}  Next action {self.action_string[action]}')
                 # Play action, get next game state or reward list
                 state, reward = game.do_action(action)
-            fitness += reward[0] 
+
+            #only count losses
+            if(reward[0] < 0):
+                fitness += reward[0] 
+
             if (self.logs == True):
                 print (f'Current fitness= {fitness}  Latest Reward= {reward}')
         return fitness

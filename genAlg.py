@@ -23,8 +23,7 @@ class Graph:
         self.xs = []
         self.ys = [] #average fitness of population
         self.zs = [] #best fitness in population
-        self.fittest_score = -1000
-        #TODO store best chromosome somewhere?
+        self.fittest_score = 0
 
     def add_to_plot(self, fitness_scores, fittest, fittest_score, step):
         self.xs.append(step)
@@ -55,7 +54,7 @@ chromosomes for use in the genetic algorithm solver
 """
 class population(object):
 
-    def __init__(self, pop_num, fit_hands_to_play=10):
+    def __init__(self, pop_num, fit_hands_to_play=200):
         self.num = pop_num
         self.size = 0
         self.list = []
