@@ -16,30 +16,36 @@ from time import time
 Class to hold and display fitness score information for the geneticAlg class
 """
 class Graph:
-    def __init__(self, time_limit):
-        self.x_limit = time_limit/10 #will plot every ten time units
+    def __init__(self):
+        #self.x_limit = time_limit
         self.y_limit = 1500 #change
         self.z_limit = 1500 #change
         self.xs = []
         self.ys = [] #average fitness of population
         self.zs = [] #best fitness in population
+        self.fittest_score = -1000
         #TODO store best chromosome somewhere?
 
-    def add_to_plot(self, fitness_scores):
-        if (len(self.xs) != 0):
-            self.xs.append(self.xs[-1]+10) #add an x value for this time step (called every ten)
-        else:
-            self.xs.append(0) #add an x value for this time step (called every ten)
-
+    def add_to_plot(self, fitness_scores, fittest, fittest_score, step):
+        self.xs.append(step)
         self.ys.append(sum(fitness_scores)/len(fitness_scores)) #add average fitness to ys
         self.zs.append(max(fitness_scores)) #add best fitness to xs
+        if (fittest_score > self.fittest_score):
+            self.fittest = fittest
+            self.fittest_score = fittest_score
             
     def show_plot(self):
         plt.plot(self.xs, self.ys, 'c')
         plt.plot(self.xs, self.zs, color='#B026FF')
-        plt.xlim([0, self.x_limit])
+        plt.xlim([0, max(self.xs)])
         plt.ylim([0, self.y_limit])
+        plt.savefig("best_and_ave.png")
+        file = open("best_chromosome.txt", 'w')
+        file.write(str(self.fittest))
+        file.write("\n")
+        file.write(str(self.fittest_score))
         plt.show()
+        
 
 
 
@@ -76,6 +82,21 @@ class population(object):
 
     def getRandWeighted(self):
         return choices(self.list, self.fits, k=1)[0] #BUG ? - fitnesses are often negative, this raises ValueError
+
+    #for alternative to getRandWeighted
+    def fitnesses_to_pmf_scores(self):
+        total_f = sum(self.fits)
+        return list(map(lambda x: x / total_f, self.fits))
+
+    def select_parent(self):
+        pmf = self.fitnesses_to_pmf_scores()
+        found_parent = False 
+        while(not found_parent):
+            index = randrange(self.size)
+            if(randrange(0,1) < pmf[index]):
+                new_parent = self.list[index]
+                found_parent = True
+        return new_parent
 
 
 class popNode(object):
@@ -140,16 +161,18 @@ class geneticAlg(object):
         #set up next pop
         nextPop = population(pop.num+1) 
         for _ in range(self.popSize//2):
+
+            #p1 = pop.select_parent()
+            #p2 = pop.select_parent()
+
             p1 = pop.getRandWeighted()
             p2 = pop.getRandWeighted()
             while(p2 == p1):
                 p2 = pop.getRandWeighted()
+                #p2 = pop.select_parent()
             coPair = p1.crossover(p2)
             child1 = coPair[0]
             child2 = coPair[1]
-            #TODO remove
-            print(random)
-            print(type(random))
             if randrange(0,1) < self.mutChance:
                 child1.mutate()
             if randrange(0,1) < self.mutChance:
@@ -197,19 +220,21 @@ class geneticAlg(object):
         return popNodesList
 
     def runAlgTime(self, timeLimit):
-        self.graph = Graph(timeLimit)
+        self.graph = Graph()
         start = time()
+        step = 0
         popNodesList = []
         curPop = self.makeInitialPopulation()
         while(True):
             time_passed = time()-start
-            if(time_passed%10 < 1):
-                self.graph.add_to_plot(curPop.fits)
+            if(step%10 == 0):
+                self.graph.add_to_plot(curPop.fits, curPop.fittest, curPop.maxFit, step)
             nextGen = self.getNextPop(curPop)
             popNodesList.append(popNode(curPop))
             curPop = nextGen
             if time_passed >= timeLimit:
                 break
+            step += 1
         popNodesList.append(popNode(curPop))
         return popNodesList
 
