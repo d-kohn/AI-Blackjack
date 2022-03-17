@@ -1,3 +1,4 @@
+
 from random import random, randrange
 
 class Q_Table():
@@ -7,7 +8,7 @@ class Q_Table():
     DOUBLE_DOWN = 2
     SPLIT = 3
 
-    def __init__(s, action_count):
+    def __init__(s, action_count=0):
         s.action_count = action_count
         s.q_table = {}
         s.state = ()
@@ -23,6 +24,28 @@ class Q_Table():
             for dealer_hand_state in range(2, 12):
                 for round in range (1, 3):
                         s.q_table[tuple([hand_state, dealer_hand_state, round])] = [0,0,0,0]
+
+    def read_in(self, filename):
+        file = open(filename, 'r')
+        empty = False
+        #readline first is key, second is val, repeat
+        while not empty:
+            key_line = file.readline()
+            if not key_line:
+                empty = True
+                break
+            value_line = file.readline()
+
+            key_list = []
+            for item in key_line:
+                key_list.append(item)
+            value_list = []
+            for value in value_line:
+                value_list.append(value)
+
+            self.q_table[tuple(key_list)] = value_list
+
+
 
 
     def update_q_table(s, reward, eta, discount, new_state):
@@ -43,7 +66,7 @@ class Q_Table():
             (s.q_table[s.prev_state])[s.action] = prev_state_actions[s.action] + eta * (reward + discount * current_state_max_reward - prev_state_actions[s.action])
             
 
-    def choose_action(s, epsilon):
+    def choose_action(s, epsilon=0):
         current_state = s.q_table[s.state]
         if (1 - epsilon < random()):
             return randrange(s.action_count)
