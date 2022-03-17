@@ -34,7 +34,7 @@ class GA_player:
 
 class Q_player:
     def __init__(self):
-        self.strategy = Q_Table()
+        self.strategy = Q_Table(4)
         self.strategy.read_in(Q_FILE) 
 
     def play_hands(self, num_hands):

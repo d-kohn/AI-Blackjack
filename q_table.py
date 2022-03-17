@@ -8,7 +8,7 @@ class Q_Table():
     DOUBLE_DOWN = 2
     SPLIT = 3
 
-    def __init__(s, action_count=0):
+    def __init__(s, action_count):
         s.action_count = action_count
         s.q_table = {}
         s.state = ()
