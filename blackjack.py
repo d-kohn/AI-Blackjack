@@ -100,10 +100,10 @@ class Blackjack():
                     hand_state += 10
                     break
         state_round = 1
-        if (s.round > 1):
+        if (s.round >= 1):
             state_round = 2
 
-        if (s.round == 1):
+        if (s.round == 0):
             if (s.hands[s.PLAYER_HAND][s.CARD_1] == s.hands[s.PLAYER_HAND][s.CARD_2]):
 #                print(s.hands[s.PLAYER_HAND])
                 hand_state = 29 + s.hands[s.PLAYER_HAND][s.CARD_1]
@@ -121,7 +121,7 @@ class Blackjack():
         s.player_won = False
         s.split_won = False
         s.dealer_lost = False
-        s.round = 1                         # game round    
+        s.round = 0                         # game round    
         s.double_down_reward = 0
         s.final_reward = [0]                  # unused atm
 
@@ -152,6 +152,7 @@ class Blackjack():
 
     def do_action(s, move):
         state = None
+        s.round += 1
         if (s.playing == True):
             s.action[move](s)
             if (s.split_active == True):
@@ -175,7 +176,6 @@ class Blackjack():
                 print(f'State: {state}  Reward: {s.final_reward}  Dealer Showing: {s.hands[s.DEALER_HAND][s.SHOWING]}  Player Hand: {s.hands[s.PLAYER_HAND]}  Player: {s.hand_sums[s.PLAYER_HAND]}  Split: {s.hand_sums[s.SPLIT_HAND]}  Split Hand: {s.hands[s.SPLIT_HAND]}  Split Active={s.split_active}  Split={s.split}  Playing={s.playing}  Player Lost={s.player_lost}  Split Lost={s.split_lost}')
         elif (s.logs == True):
             print("No game in progress")
-        s.round += 1
         return state, s.final_reward
 
     def __hit(s):

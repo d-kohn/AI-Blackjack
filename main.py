@@ -7,7 +7,7 @@ from time import sleep
 ACTION_COUNT = 4
 EPISODES = 20000
 GAMES = 200
-EPSILON = 0.25
+EPSILON = 0.05
 EPSILON_DECREASE_FREQ = 50
 EPSILON_DECREASE_RATE = (EPSILON / (EPISODES/EPSILON_DECREASE_FREQ)) * 1.5
 LEARNING_RATE = 0.001
@@ -22,19 +22,35 @@ BET = 10
 DECK_COUNT = 1
 
 score_set = []
-highest_score = 0
+highest_score = -999999
 epsilon = EPSILON
 q_table = Q_Table(ACTION_COUNT)
+stored_state = ()
+stored_action = ()
 
 for episodes in range(1, EPISODES+1):
     game = Blackjack(BET, DECK_COUNT)
     for games in range(1, GAMES+1):
         state = game.start_hand()
-        q_table.starting_state(state)
+        q_table.set_state(state)
         while (state != None):
             action = q_table.choose_action(epsilon)
+            # if (action == game.SPLIT):
+            #     stored_state = state
+            #     stored_action = action
+            #     while (state != None):
+            #         state, reward = game.do_action(action)
+            #         action = q_table.choose_action(epsilon)
+            #         q_table.update_q_table(reward, LEARNING_RATE, DISCOUNT, state)
+            #     q_table.set_state(stored_state)
+            #     action = stored_action
+            #     q_table.update_q_table(reward, LEARNING_RATE, DISCOUNT, state)
+            # else:
             state, reward = game.do_action(action)
-            q_table.update_q_table(reward, LEARNING_RATE, DISCOUNT, state)
+            q_table.update_q_table(reward[0], LEARNING_RATE, DISCOUNT, state)
+            if (len(reward) == 2):
+                pass
+
     score = game.get_score()
     if (score > highest_score):
         highest_score = score

@@ -1,7 +1,7 @@
 from random import random, randrange
 
 class Q_Table():
-    ACTION_COUNT = 3
+#    ACTION_COUNT = 4
     HIT = 0
     STAND = 1
     DOUBLE_DOWN = 2
@@ -19,7 +19,7 @@ class Q_Table():
         #         for round in range (1, 3):
         #             s.q_table[tuple([player_hand_state, dealer_hand_state, round])] = [0,0,0,0]
 
-        for hand_state in range(4, 40):
+        for hand_state in range(4, 41):
             for dealer_hand_state in range(2, 12):
                 for round in range (1, 3):
                         s.q_table[tuple([hand_state, dealer_hand_state, round])] = [0,0,0,0]
@@ -65,7 +65,7 @@ class Q_Table():
                 s.action = best_actions[index]
         return s.action
 
-    def starting_state(s, new_state):
+    def set_state(s, new_state):
         s.state = new_state
 
     def output_q_table(s, file):
@@ -77,12 +77,18 @@ class Q_Table():
         f.close()
 
     def output_action_table(s, file):
+        action_string = {
+            0 : 'HIT',
+            1 : 'STAND',
+            2 : 'DBL DWN',
+            3 : 'SPLIT'
+        }
         with open(file, "w") as f:
-            for r in range(1,3):
-                f.write(f'Round {r}\n')
-                for hand_state in range(5, 41):
+            for round in range(1,3):
+                f.write(f'Round {round}\n')
+                for hand_state in range(4, 41):
                     for dealer in range(2, 12):
-                        key = tuple([hand_state,dealer,r])
+                        key = tuple([hand_state,dealer,round])
                         if (sum(s.q_table[key]) != 0):
                             best = 0                           
                             for i in range(1, s.action_count):
@@ -92,9 +98,3 @@ class Q_Table():
                     f.write('\n')
         f.close()
 
-    action_string = {
-        0 : 'HIT',
-        1 : 'STAND',
-        2 : 'DOUBLE DOWN',
-        3 : 'SPLIT'
-    }
