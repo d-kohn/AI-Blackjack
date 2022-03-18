@@ -2,7 +2,7 @@
 # Required files: main.py, robot.py, map.py
 from blackjack import Blackjack
 from q_table import Q_Table
-from time import sleep
+from time import sleep, time
 
 ACTION_COUNT = 4
 EPISODES = 20000
@@ -21,12 +21,17 @@ ACTION_TABLE_FILE = "action.csv"
 BET = 10
 DECK_COUNT = 1
 
+TIME_LIMIT = 1200
+
 score_set = []
 highest_score = 0
 epsilon = EPSILON
 q_table = Q_Table(ACTION_COUNT)
+episodes = 1
 
-for episodes in range(1, EPISODES+1):
+start = time()
+times_up = False
+while not times_up:
     game = Blackjack(BET, DECK_COUNT)
     for games in range(1, GAMES+1):
         state = game.start_hand()
@@ -51,8 +56,11 @@ for episodes in range(1, EPISODES+1):
         with open(SCORES_FILE, "a") as f:
             f.write(f'{episodes},{score},{avg}\n')
         f.close()
+    if time()-start >= TIME_LIMIT:
+        times_up = True
+    episodes += 1
 
-q_table.output_action_table(ACTION_TABLE_FILE)
+#q_table.output_action_table(ACTION_TABLE_FILE)
 
 # game = Blackjack(BET, DECK_COUNT)
 # game.logs_on(True)
