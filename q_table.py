@@ -43,8 +43,8 @@ class Q_Table():
             current_state_max_reward = 0
             (s.q_table[s.prev_state])[s.action] = prev_state_actions[s.action] + eta * (reward + discount * current_state_max_reward - prev_state_actions[s.action])
             
-    def choose_action(s, epsilon):
-        current_state = s.q_table[s.state]
+    def choose_action(s, game_state, epsilon):
+        current_state = s.q_table[game_state]
         if (1 - epsilon < random()):
             return randrange(s.action_count)
         # Do greedy action

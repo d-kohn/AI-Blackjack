@@ -5,14 +5,14 @@ from q_table import Q_Table
 from time import sleep
 
 ACTION_COUNT = 4
-EPISODES = 20000
+EPISODES = 10000
 GAMES = 200
 EPSILON = 0.05
 EPSILON_DECREASE_FREQ = 50
 EPSILON_DECREASE_RATE = (EPSILON / (EPISODES/EPSILON_DECREASE_FREQ)) * 1.5
 LEARNING_RATE = 0.001
 DISCOUNT = 0.9
-REPORT_FREQUENCY = 1
+REPORT_FREQUENCY = 200
 Q_TABLE_FILE = "q-table.txt"
 REPORT_FILE = "reports.txt"
 SCORES_FILE = "scores.csv"
@@ -38,7 +38,7 @@ def train(q_table : Q_Table):
             state = game.start_hand()            
             q_table.set_state(state)
             while (state != None):
-                action = q_table.choose_action(epsilon)
+                action = q_table.choose_action(state, epsilon)
                 # if (action == game.SPLIT):
                 #     stored_state = state
                 #     stored_action = action
@@ -64,37 +64,35 @@ def train(q_table : Q_Table):
         if (episodes % REPORT_FREQUENCY == 0):
             avg = sum(score_set) / REPORT_FREQUENCY
             score_set = []
-            print(f'Episode: {episodes}  Highest Score: {highest_score}  Last {REPORT_FREQUENCY} Avg Score: {avg}  Epsilon: {epsilon}')    
+            print(f'Episode: {episodes}  Highest Score: {highest_score}  Last {REPORT_FREQUENCY} Avg Score: {round(avg, 1)}  / {GAMES*BET}  Epsilon: {round(epsilon, 6)}')    
             q_table.output_q_table(Q_TABLE_FILE)
             with open(SCORES_FILE, "a") as f:
                 f.write(f'{episodes},{score},{avg}\n')
             f.close()
     q_table.output_action_table(ACTION_TABLE_FILE)
 
-#train(q_table)
+train(q_table)
 #game.logs_on(True)
-q_table.read_in('q-table.txt')
+#q_table.read_in('q-table.txt')
 score = 0
-dealer_score = 0
-hand_count = 0
-games_played = 0
-score_set = []
+overall_score = 0
+GAME_COUNT = 2000
 
-for episodes in range (20):
+for episodes in range (1, GAME_COUNT+1):
     game = Blackjack(BET, DECK_COUNT)
     score = 0
-    for _ in range(1, GAMES+1):    
+    for _ in range(GAMES):    
         state = game.start_hand()            
-        q_table.set_state(state)
         while (state != None):
-            action = q_table.choose_action(0)
+            action = q_table.choose_action(state, 0)
             state, reward = game.do_action(action)
-            q_table.set_state(state)
-#            q_table.update_q_table(sum(reward), LEARNING_RATE, DISCOUNT, state)
+
             if (sum(reward) > 0):
                 score += sum(reward)
-    print(f'Episode: {episodes}  Player Score: {score}')    
+    overall_score += score
+    if (episodes % 100 == 0):
+        print(f'Episodes: {episodes}  Player Score Average: {round(overall_score/episodes, 2)} / {GAMES*BET}')    
 
-
+print(f'Hands played: {GAME_COUNT*GAMES}  Player Score : {round(overall_score/episodes, 2)} / {GAMES*BET}')
 
 
