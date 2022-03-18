@@ -1,8 +1,9 @@
 
 from random import random, randrange
+from tokenize import Double
 
 class Q_Table():
-    ACTION_COUNT = 3
+    ACTION_COUNT = 4
     HIT = 0
     STAND = 1
     DOUBLE_DOWN = 2
@@ -20,7 +21,7 @@ class Q_Table():
         #         for round in range (1, 3):
         #             s.q_table[tuple([player_hand_state, dealer_hand_state, round])] = [0,0,0,0]
 
-        for hand_state in range(4, 40):
+        for hand_state in range(4, 41):
             for dealer_hand_state in range(2, 12):
                 for round in range (1, 3):
                         s.q_table[tuple([hand_state, dealer_hand_state, round])] = [0,0,0,0]
@@ -34,16 +35,21 @@ class Q_Table():
             if not key_line:
                 empty = True
                 break
+            key_line = key_line.strip('\n')
+            key = eval(key_line)
+
             value_line = file.readline()
+            value_line = value_line.strip('\n')
+            value_line = value_line.strip('[')
+            value_line = value_line.strip(']')
+            value_line = value_line.replace(',', '')
+            value_list = value_line.split()
 
-            key_list = []
-            for item in key_line:
-                key_list.append(item)
-            value_list = []
-            for value in value_line:
-                value_list.append(value)
+            value_list_dbl = []
+            for i in range(len(value_list)):
+                value_list_dbl.append(float(value_list[i]))
 
-            self.q_table[tuple(key_list)] = value_list
+            self.q_table[key] = value_list_dbl
 
 
 
@@ -88,7 +94,7 @@ class Q_Table():
                 s.action = best_actions[index]
         return s.action
 
-    def starting_state(s, new_state):
+    def set_state(s, new_state):
         s.state = new_state
 
     def output_q_table(s, file):
