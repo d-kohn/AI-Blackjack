@@ -1,4 +1,5 @@
 from random import random, randrange
+from tokenize import Double
 
 class Q_Table():
 #    ACTION_COUNT = 4
@@ -42,7 +43,6 @@ class Q_Table():
             current_state_max_reward = 0
             (s.q_table[s.prev_state])[s.action] = prev_state_actions[s.action] + eta * (reward + discount * current_state_max_reward - prev_state_actions[s.action])
             
-
     def choose_action(s, epsilon):
         current_state = s.q_table[s.state]
         if (1 - epsilon < random()):
@@ -76,6 +76,41 @@ class Q_Table():
                     f.write(f'{s.q_table[state]}\n')
         f.close()
 
+    def read_in(self, filename):
+        file = open(filename, 'r')
+        empty = False
+        #readline first is key, second is val, repeat
+        while not empty:
+            key_line = file.readline()
+            if not key_line:
+                empty = True
+                break
+            key_line = key_line.strip('\n')
+            key = eval(key_line)
+
+            value_line = file.readline()
+            value_line = value_line.strip('\n')
+            value_line = value_line.strip('[')
+            value_line = value_line.strip(']')
+            value_line = value_line.replace(',', '')
+            value_list = value_line.split()
+
+            value_list_dbl = []
+            for i in range(len(value_list)):
+                value_list_dbl.append(float(value_list[i]))
+
+#            for value in value_list:
+#                value = float(value)
+
+#            key_list = []
+#            for item in key_line:
+#                key_list.append(item)
+            # value_list = []
+            # for value in value_line:
+            #     value_list.append(value)
+
+            self.q_table[key] = value_list_dbl
+
     def output_action_table(s, file):
         action_string = {
             0 : 'HIT',
@@ -94,7 +129,7 @@ class Q_Table():
                             for i in range(1, s.action_count):
                                 if ((s.q_table[key])[i] > (s.q_table[key])[best]):
                                     best = i
-                            f.write(f'{s.action_string[best]},')
+                            f.write(f'{action_string[best]},')
                     f.write('\n')
         f.close()
 

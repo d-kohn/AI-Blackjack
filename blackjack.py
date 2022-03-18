@@ -167,9 +167,11 @@ class Blackjack():
                 elif (s.player_won == True):
                     s.final_reward[0] += s.bet + s.double_down_reward
                 if (s.split_lost == True):
-                    s.final_reward.append(-s.bet)
+                    s.final_reward[0] += -s.bet
+#                    s.final_reward.append(-s.bet)
                 elif (s.split_won):
-                    s.final_reward.append(s.bet)
+                    s.final_reward[0] += s.bet
+#                    s.final_reward.append(s.bet)
                 s.score += sum(s.final_reward)
             if (s.logs == True):
 #                print(f'State: {state}  Reward: {s.final_reward}  Player Hand: {s.hands[s.PLAYER_HAND]}  Player: {s.hand_sums[s.PLAYER_HAND]}  Dealer: {s.hand_sums[s.DEALER_HAND]}  Dealer Hand: {s.hands[s.DEALER_HAND]}  Split: {s.hand_sums[s.SPLIT_HAND]}  Split Hand: {s.hands[s.SPLIT_HAND]}  Split Active={s.split_active}  Split={s.split}  Playing={s.playing}  Player Lost={s.player_lost}  Split Lost={s.split_lost}')
@@ -291,9 +293,9 @@ class Blackjack():
             if (s.player_lost != True):
                 s.__stand()
         if(s.player_won == True):
-            s.double_down_bet = s.bet
+            s.double_down_reward = s.bet
         elif (s.player_lost == True):
-            s.double_down_bet = -s.bet
+            s.double_down_reward = -s.bet
 
     def __dealer_play(s):
         s.hand_sums[s.DEALER_HAND] = sum(s.hands[s.DEALER_HAND])
